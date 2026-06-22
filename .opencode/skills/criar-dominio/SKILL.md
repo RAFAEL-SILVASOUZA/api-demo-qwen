@@ -103,8 +103,11 @@ Regras de estilo derivadas desse padrão (NÃO desvie sem motivo):
 5. Crie os dois arquivos de teste em `tests/ProdutosApi.Tests/`.
 6. Rode `dotnet build Migracao.sln --nologo -v q` e corrija erros até compilar.
 7. Rode `dotnet test Migracao.sln --nologo -v q` e garanta que todos passam.
-8. Faça um resumo: arquivos criados/alterados, endpoints expostos
-   (`/api/<entidades>`), regras de validação aplicadas e o resultado dos testes.
+8. Se algum teste falhar, analise a mensagem de erro, ajuste o código ou os
+    testes até que todos passem. Repita `dotnet build` + `dotnet test` até obter
+    build limpo e testes 100% verdes.
+9. Faça um resumo: arquivos criados/alterados, endpoints expostos
+    (`/api/<entidades>`), regras de validação aplicadas e o resultado dos testes.
 
 ## Pluralização das rotas
 
