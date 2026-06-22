@@ -187,10 +187,10 @@ Mostre ao usuário:
 - 60-79%: Aceitável, mas pode melhorar
 - < 60% (low): Precisa de mais testes
 
-### 8. Sugerir e aplicar correções nos testes
+### 8. Aplicar correções nos testes (ciclo iterativo)
 
-Para cada mutant sobrevivente, **leia o arquivo de teste correspondente**, identifique
-o teste que cobre o mutante e **edite o arquivo de teste** para matar o mutante.
+Para CADA mutant sobrevivente, **leia o arquivo de teste correspondente**, identifique
+o teste que cobre o mutante e **edite o arquivo de teste** para matá-lo.
 
 #### Fluxo de mitigação (para CADA mutant sobrevivente):
 
@@ -202,8 +202,13 @@ o teste que cobre o mutante e **edite o arquivo de teste** para matar o mutante.
 4. **Identifique a correção** baseada no tipo de mutação (ver abaixo).
 5. **Edite o arquivo de teste** com a correção usando a ferramenta `edit`.
 6. **Rode os testes** para confirmar que passaram: `dotnet test`.
-7. **Rode o Stryker novamente** para verificar se o mutante foi morto.
-8. Se ainda sobreviver, ajuste a correção e repita.
+7. **Rode o Stryker novamente** (`dotnet stryker`) para verificar se o mutante foi morto.
+8. Se o mutante ainda sobreviver, **reavalie a correção**:
+   - Verifique se o EF Core InMemory está retornando objetos em memória (change tracking) ao invés do banco.
+   - Use `AsNoTracking()` na consulta de verificação para forçar leitura do banco.
+   - Ou crie um novo contexto/DbContext isolado para a verificação.
+   - Edite e repita os passos 6-8.
+9. Repita o fluxo completo para cada mutant sobrevivente até que **todos sejam mortos** ou o score atinja >= 80% sem sobreviventes.
 
 #### Correções por tipo de mutação:
 
@@ -213,9 +218,14 @@ direta no `DbContext`:
 
 ```csharp
 // No teste X_DeveAtualizarCampos, após chamar o serviço:
-var atualizadoNoBanco = await context.X.FirstAsync(c => c.Id == id);
+var atualizadoNoBanco = await context.X.AsNoTracking().FirstAsync(c => c.Id == id);
 Assert.Equal(valorEsperado, atualizadoNoBanco.Campo);
 ```
+
+> **Importante com EF Core InMemory:** Use `AsNoTracking()` na consulta de verificação.
+> Sem isso, o EF Core InMemory retorna o objeto já alterado em memória (change tracking),
+> então a mutação que remove `SaveChangesAsync` ainda passa no teste porque o objeto
+> rastreado pelo contexto já tem os valores atualizados.
 
 **Statement mutation em método que retorna valor (ex.: `return true`):**
 O teste não verifica o valor de retorno real. Adicione `Assert`:
