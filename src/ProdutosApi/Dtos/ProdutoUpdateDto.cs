@@ -14,4 +14,6 @@ public class ProdutoUpdateDto
     public int QuantidadeEmEstoque { get; set; }
 
     public bool Ativo { get; set; }
+
+    public int? CategoriaId { get; set; }
 }

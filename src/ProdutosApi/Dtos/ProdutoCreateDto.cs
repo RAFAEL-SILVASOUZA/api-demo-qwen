@@ -12,4 +12,6 @@ public class ProdutoCreateDto
     public decimal Preco { get; set; }
 
     public int QuantidadeEmEstoque { get; set; }
+
+    public int? CategoriaId { get; set; }
 }

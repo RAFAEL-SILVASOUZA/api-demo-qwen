@@ -41,6 +41,7 @@ public class ProdutoService : IProdutoService
             Descricao = dto.Descricao?.Trim(),
             Preco = dto.Preco,
             QuantidadeEmEstoque = dto.QuantidadeEmEstoque,
+            CategoriaId = dto.CategoriaId,
             Ativo = true,
             CriadoEm = DateTime.UtcNow
         };
@@ -63,6 +64,7 @@ public class ProdutoService : IProdutoService
         produto.Descricao = dto.Descricao?.Trim();
         produto.Preco = dto.Preco;
         produto.QuantidadeEmEstoque = dto.QuantidadeEmEstoque;
+        produto.CategoriaId = dto.CategoriaId;
         produto.Ativo = dto.Ativo;
         produto.AtualizadoEm = DateTime.UtcNow;
 
@@ -91,6 +93,8 @@ public class ProdutoService : IProdutoService
         Descricao = produto.Descricao,
         Preco = produto.Preco,
         QuantidadeEmEstoque = produto.QuantidadeEmEstoque,
+        CategoriaId = produto.CategoriaId,
+        CategoriaNome = produto.Categoria?.Nome,
         Ativo = produto.Ativo,
         CriadoEm = produto.CriadoEm,
         AtualizadoEm = produto.AtualizadoEm

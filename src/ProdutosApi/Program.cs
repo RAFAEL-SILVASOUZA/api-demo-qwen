@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("ProdutosDb"));
 
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 
 // Validações com FluentValidation (validação automática a partir dos DTOs).
 builder.Services.AddFluentValidationAutoValidation();

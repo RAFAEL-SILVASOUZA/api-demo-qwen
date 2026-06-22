@@ -1,9 +1,9 @@
 namespace ProdutosApi.Models;
 
 /// <summary>
-/// Entidade de domínio que representa um produto cadastrado.
+/// Entidade de domínio que representa uma categoria de produto.
 /// </summary>
-public class Produto
+public class Categoria
 {
     public int Id { get; set; }
 
@@ -11,17 +11,11 @@ public class Produto
 
     public string? Descricao { get; set; }
 
-    public decimal Preco { get; set; }
-
-    public int QuantidadeEmEstoque { get; set; }
-
     public bool Ativo { get; set; } = true;
 
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
     public DateTime? AtualizadoEm { get; set; }
 
-    public int? CategoriaId { get; set; }
-
-    public Categoria? Categoria { get; set; }
+    public ICollection<Produto> Produtos { get; set; } = new List<Produto>();
 }

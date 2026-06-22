@@ -1,9 +1,9 @@
 namespace ProdutosApi.Dtos;
 
 /// <summary>
-/// Representação de um produto retornado pela API.
+/// Representação de uma categoria retornada pela API.
 /// </summary>
-public class ProdutoResponseDto
+public class CategoriaResponseDto
 {
     public int Id { get; set; }
 
@@ -11,17 +11,9 @@ public class ProdutoResponseDto
 
     public string? Descricao { get; set; }
 
-    public decimal Preco { get; set; }
-
-    public int QuantidadeEmEstoque { get; set; }
-
     public bool Ativo { get; set; }
 
     public DateTime CriadoEm { get; set; }
 
     public DateTime? AtualizadoEm { get; set; }
-
-    public int? CategoriaId { get; set; }
-
-    public string? CategoriaNome { get; set; }
 }

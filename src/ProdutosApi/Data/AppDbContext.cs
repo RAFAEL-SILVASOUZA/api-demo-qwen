@@ -11,6 +11,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Produto> Produtos => Set<Produto>();
 
+    public DbSet<Categoria> Categorias => Set<Categoria>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Produto>(entity =>
@@ -28,6 +30,25 @@ public class AppDbContext : DbContext
                 .HasPrecision(18, 2);
 
             entity.HasIndex(p => p.Nome);
+
+            entity.HasOne(p => p.Categoria)
+                .WithMany(c => c.Produtos)
+                .HasForeignKey(p => p.CategoriaId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+
+            entity.Property(c => c.Nome)
+                .IsRequired()
+                .HasMaxLength(80);
+
+            entity.Property(c => c.Descricao)
+                .HasMaxLength(300);
+
+            entity.HasIndex(c => c.Nome);
         });
     }
 }
