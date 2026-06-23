@@ -115,6 +115,12 @@ public class CategoriaServiceTests
         Assert.Equal("Brinquedos e Jogos", resultado!.Nome);
         Assert.False(resultado.Ativo);
         Assert.NotNull(resultado.AtualizadoEm);
+
+        context.ChangeTracker.Clear();
+        var atualizadoNoBanco = await context.Categorias.FirstAsync(c => c.Id == id);
+        Assert.Equal("Brinquedos e Jogos", atualizadoNoBanco.Nome);
+        Assert.Equal("Brinquedos, jogos e puzzles", atualizadoNoBanco.Descricao);
+        Assert.False(atualizadoNoBanco.Ativo);
     }
 
     [Fact]

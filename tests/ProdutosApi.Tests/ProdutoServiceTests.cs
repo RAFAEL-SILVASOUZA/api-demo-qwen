@@ -121,6 +121,13 @@ public class ProdutoServiceTests
         Assert.Equal(350m, resultado.Preco);
         Assert.False(resultado.Ativo);
         Assert.NotNull(resultado.AtualizadoEm);
+
+        context.ChangeTracker.Clear();
+        var atualizadoNoBanco = await context.Produtos.FirstAsync(p => p.Id == id);
+        Assert.Equal("SSD NVMe", atualizadoNoBanco.Nome);
+        Assert.Equal(350m, atualizadoNoBanco.Preco);
+        Assert.Equal(8, atualizadoNoBanco.QuantidadeEmEstoque);
+        Assert.False(atualizadoNoBanco.Ativo);
     }
 
     [Fact]
