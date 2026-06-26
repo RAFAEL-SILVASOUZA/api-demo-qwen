@@ -1,11 +1,18 @@
+using ProdutosApi.Data;
+
 namespace ProdutosApi.Tests;
 
-[CollectionDefinition(nameof(ServiceTests))]
+public static class ServiceTests
+{
+    public const string Name = "ServiceTests";
+}
+
+[CollectionDefinition(ServiceTests.Name)]
 public class ServiceTestsCollection : ICollectionFixture<ServiceTestDatabase>
 {
 }
 
-[Collection(ServiceTests)]
+[Collection(ServiceTests.Name)]
 public class ServiceTestDatabase : IAsyncLifetime
 {
     private readonly AppDbContext _context;

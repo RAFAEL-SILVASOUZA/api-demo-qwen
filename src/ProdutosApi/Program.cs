@@ -46,7 +46,20 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["issuer"],
         ValidAudience = jwtSettings["audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"[JWT] Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine($"[JWT] Challenge: {context.Error}, Description: {context.ErrorDescription}");
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -54,22 +67,40 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Produtos API",
-        Version = "v1",
-        Description = "API para cadastro e gerenciamento de produtos."
-    });
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Produtos API",
+            Version = "v1",
+            Description = "API para cadastro e gerenciamento de produtos."
+        });
 
-    // Inclui os comentários XML na documentação do Swagger.
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        options.IncludeXmlComments(xmlPath);
-    }
-});
+        // Inclui os comentários XML na documentação do Swagger.
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            options.IncludeXmlComments(xmlPath);
+        }
+
+        // Adiciona o botão de autenticação JWT no Swagger.
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Insira o token JWT no campo abaixo."
+        });
+
+        options.AddSecurityRequirement((doc) =>
+        {
+            var requirement = new OpenApiSecurityRequirement();
+            requirement.Add(new OpenApiSecuritySchemeReference("Bearer"), new List<string>());
+            return requirement;
+        });
+    });
 
 var app = builder.Build();
 

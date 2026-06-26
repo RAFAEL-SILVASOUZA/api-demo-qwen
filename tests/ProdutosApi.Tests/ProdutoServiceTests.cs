@@ -7,7 +7,7 @@ using Xunit;
 
 namespace ProdutosApi.Tests;
 
-[Collection(ServiceTests)]
+[Collection(ServiceTests.Name)]
 public class ProdutoServiceTests
 {
     private readonly ServiceTestDatabase _database;

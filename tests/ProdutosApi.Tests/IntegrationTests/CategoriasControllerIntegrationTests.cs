@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using ProdutosApi.Data;
 using ProdutosApi.Dtos;
 using ProdutosApi.Models;
@@ -15,7 +17,7 @@ public class CategoriasControllerIntegrationTests : IClassFixture<TestApplicatio
     public CategoriasControllerIntegrationTests(TestApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient();
     }
 
     public async Task InitializeAsync()
