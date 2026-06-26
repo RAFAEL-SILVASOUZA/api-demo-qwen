@@ -7,22 +7,20 @@ using Xunit;
 
 namespace ProdutosApi.Tests;
 
+[Collection(ServiceTests)]
 public class ProdutoServiceTests
 {
-    private static AppDbContext CriarContexto()
-    {
-        // Banco isolado por teste para evitar interferência entre cenários.
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
+    private readonly ServiceTestDatabase _database;
 
-        return new AppDbContext(options);
+    public ProdutoServiceTests(ServiceTestDatabase database)
+    {
+        _database = database;
     }
 
     [Fact]
     public async Task CriarAsync_DeveAdicionarProduto_ERetornarComId()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new ProdutoService(context);
         var dto = new ProdutoCreateDto
         {
@@ -37,13 +35,13 @@ public class ProdutoServiceTests
         Assert.True(resultado.Id > 0);
         Assert.Equal("Teclado Mecânico", resultado.Nome);
         Assert.True(resultado.Ativo);
-        Assert.Equal(1, await context.Produtos.CountAsync());
+        Assert.Equal(1, await ((IQueryable<Produto>)context.Produtos).CountAsync());
     }
 
     [Fact]
     public async Task CriarAsync_DeveRemoverEspacosDoNome()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new ProdutoService(context);
 
         var resultado = await service.CriarAsync(new ProdutoCreateDto
@@ -59,7 +57,7 @@ public class ProdutoServiceTests
     [Fact]
     public async Task ObterPorIdAsync_DeveRetornarNull_QuandoNaoEncontrado()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new ProdutoService(context);
 
         var resultado = await service.ObterPorIdAsync(999);
@@ -70,12 +68,12 @@ public class ProdutoServiceTests
     [Fact]
     public async Task ObterPorIdAsync_DeveRetornarProduto_QuandoExiste()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Produtos.Add(new Produto { Nome = "Monitor", Preco = 1200m, QuantidadeEmEstoque = 3 });
         await context.SaveChangesAsync();
         var service = new ProdutoService(context);
 
-        var existente = await context.Produtos.FirstAsync();
+        var existente = await ((IQueryable<Produto>)context.Produtos).FirstAsync();
         var resultado = await service.ObterPorIdAsync(existente.Id);
 
         Assert.NotNull(resultado);
@@ -85,7 +83,7 @@ public class ProdutoServiceTests
     [Fact]
     public async Task ObterTodosAsync_DeveRetornarOrdenadoPorNome()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Produtos.AddRange(
             new Produto { Nome = "Webcam", Preco = 200m, QuantidadeEmEstoque = 1 },
             new Produto { Nome = "Cabo HDMI", Preco = 30m, QuantidadeEmEstoque = 50 });
@@ -102,7 +100,7 @@ public class ProdutoServiceTests
     [Fact]
     public async Task AtualizarAsync_DeveAtualizarCampos_ePreencherAtualizadoEm()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Produtos.Add(new Produto { Nome = "SSD", Preco = 300m, QuantidadeEmEstoque = 5 });
         await context.SaveChangesAsync();
         var id = (await context.Produtos.FirstAsync()).Id;
@@ -123,7 +121,7 @@ public class ProdutoServiceTests
         Assert.NotNull(resultado.AtualizadoEm);
 
         context.ChangeTracker.Clear();
-        var atualizadoNoBanco = await context.Produtos.FirstAsync(p => p.Id == id);
+        var atualizadoNoBanco = await ((IQueryable<Produto>)context.Produtos).FirstAsync(p => p.Id == id);
         Assert.Equal("SSD NVMe", atualizadoNoBanco.Nome);
         Assert.Equal(350m, atualizadoNoBanco.Preco);
         Assert.Equal(8, atualizadoNoBanco.QuantidadeEmEstoque);
@@ -133,7 +131,7 @@ public class ProdutoServiceTests
     [Fact]
     public async Task AtualizarAsync_DeveRetornarNull_QuandoNaoEncontrado()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new ProdutoService(context);
 
         var resultado = await service.AtualizarAsync(123, new ProdutoUpdateDto
@@ -150,7 +148,7 @@ public class ProdutoServiceTests
     [Fact]
     public async Task RemoverAsync_DeveRemover_QuandoExiste()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Produtos.Add(new Produto { Nome = "Pen Drive", Preco = 40m, QuantidadeEmEstoque = 20 });
         await context.SaveChangesAsync();
         var id = (await context.Produtos.FirstAsync()).Id;
@@ -159,13 +157,13 @@ public class ProdutoServiceTests
         var removido = await service.RemoverAsync(id);
 
         Assert.True(removido);
-        Assert.Equal(0, await context.Produtos.CountAsync());
+        Assert.Equal(0, await ((IQueryable<Produto>)context.Produtos).CountAsync());
     }
 
     [Fact]
     public async Task RemoverAsync_DeveRetornarFalse_QuandoNaoEncontrado()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new ProdutoService(context);
 
         var removido = await service.RemoverAsync(404);

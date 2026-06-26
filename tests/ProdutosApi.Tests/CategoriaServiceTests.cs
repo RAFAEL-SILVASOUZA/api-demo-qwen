@@ -7,21 +7,20 @@ using Xunit;
 
 namespace ProdutosApi.Tests;
 
+[Collection(ServiceTests)]
 public class CategoriaServiceTests
 {
-    private static AppDbContext CriarContexto()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
+    private readonly ServiceTestDatabase _database;
 
-        return new AppDbContext(options);
+    public CategoriaServiceTests(ServiceTestDatabase database)
+    {
+        _database = database;
     }
 
     [Fact]
     public async Task CriarAsync_DeveAdicionarCategoria_ERetornarComId()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new CategoriaService(context);
         var dto = new CategoriaCreateDto
         {
@@ -34,13 +33,13 @@ public class CategoriaServiceTests
         Assert.True(resultado.Id > 0);
         Assert.Equal("Eletrônicos", resultado.Nome);
         Assert.True(resultado.Ativo);
-        Assert.Equal(1, await context.Categorias.CountAsync());
+        Assert.Equal(1, await ((IQueryable<Categoria>)context.Categorias).CountAsync());
     }
 
     [Fact]
     public async Task CriarAsync_DeveRemoverEspacosDoNome()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new CategoriaService(context);
 
         var resultado = await service.CriarAsync(new CategoriaCreateDto
@@ -55,7 +54,7 @@ public class CategoriaServiceTests
     [Fact]
     public async Task ObterPorIdAsync_DeveRetornarNull_QuandoNaoEncontrado()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new CategoriaService(context);
 
         var resultado = await service.ObterPorIdAsync(999);
@@ -66,12 +65,12 @@ public class CategoriaServiceTests
     [Fact]
     public async Task ObterPorIdAsync_DeveRetornarCategoria_QuandoExiste()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Categorias.Add(new Categoria { Nome = "Alimentos", Descricao = "Alimentos e bebidas" });
         await context.SaveChangesAsync();
         var service = new CategoriaService(context);
 
-        var existente = await context.Categorias.FirstAsync();
+        var existente = await ((IQueryable<Categoria>)context.Categorias).FirstAsync();
         var resultado = await service.ObterPorIdAsync(existente.Id);
 
         Assert.NotNull(resultado);
@@ -81,7 +80,7 @@ public class CategoriaServiceTests
     [Fact]
     public async Task ObterTodosAsync_DeveRetornarOrdenadoPorNome()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Categorias.AddRange(
             new Categoria { Nome = "Zoo" },
             new Categoria { Nome = "Alpha" });
@@ -98,7 +97,7 @@ public class CategoriaServiceTests
     [Fact]
     public async Task AtualizarAsync_DeveAtualizarCampos_ePreencherAtualizadoEm()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Categorias.Add(new Categoria { Nome = "Brinquedos", Descricao = "Brinquedos infantis" });
         await context.SaveChangesAsync();
         var id = (await context.Categorias.FirstAsync()).Id;
@@ -117,7 +116,7 @@ public class CategoriaServiceTests
         Assert.NotNull(resultado.AtualizadoEm);
 
         context.ChangeTracker.Clear();
-        var atualizadoNoBanco = await context.Categorias.FirstAsync(c => c.Id == id);
+        var atualizadoNoBanco = await ((IQueryable<Categoria>)context.Categorias).FirstAsync(c => c.Id == id);
         Assert.Equal("Brinquedos e Jogos", atualizadoNoBanco.Nome);
         Assert.Equal("Brinquedos, jogos e puzzles", atualizadoNoBanco.Descricao);
         Assert.False(atualizadoNoBanco.Ativo);
@@ -126,7 +125,7 @@ public class CategoriaServiceTests
     [Fact]
     public async Task AtualizarAsync_DeveRetornarNull_QuandoNaoEncontrado()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new CategoriaService(context);
 
         var resultado = await service.AtualizarAsync(123, new CategoriaUpdateDto
@@ -141,7 +140,7 @@ public class CategoriaServiceTests
     [Fact]
     public async Task RemoverAsync_DeveRemover_QuandoExiste()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         context.Categorias.Add(new Categoria { Nome = "Vestuário" });
         await context.SaveChangesAsync();
         var id = (await context.Categorias.FirstAsync()).Id;
@@ -150,13 +149,13 @@ public class CategoriaServiceTests
         var removido = await service.RemoverAsync(id);
 
         Assert.True(removido);
-        Assert.Equal(0, await context.Categorias.CountAsync());
+        Assert.Equal(0, await ((IQueryable<Categoria>)context.Categorias).CountAsync());
     }
 
     [Fact]
     public async Task RemoverAsync_DeveRetornarFalse_QuandoNaoEncontrado()
     {
-        await using var context = CriarContexto();
+        await using var context = _database.Context;
         var service = new CategoriaService(context);
 
         var removido = await service.RemoverAsync(404);

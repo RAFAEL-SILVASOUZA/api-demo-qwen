@@ -12,9 +12,9 @@ using ProdutosApi.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Banco em memória (substituível por SQL Server/PostgreSQL em produção).
+// Persistência com PostgreSQL.
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase("ProdutosDb"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
