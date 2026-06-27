@@ -78,8 +78,7 @@ Regras de estilo derivadas desse padrão (NÃO desvie sem motivo):
 7. **DbContext**: adicione `public DbSet<X> Xs => Set<X>();` e um bloco
    `modelBuilder.Entity<X>(...)` em `OnModelCreating` com `HasKey`, `IsRequired`/
    `HasMaxLength` para strings, `HasPrecision(18, 2)` para `decimal`, e
-   `HasIndex` em campos relevantes. **Use `HasPrecision`, nunca `HasColumnType`**
-   (o provider é InMemory e não suporta tipos relacionais).
+    `HasIndex` em campos relevantes. **Use `HasPrecision`, nunca `HasColumnType`** (provider Npgsql/PostgreSQL).
 8. **Registro de DI** em `Program.cs`: adicione
    `builder.Services.AddScoped<IXService, XService>();` junto às demais
    registrações. Os validators já são captados por
@@ -89,8 +88,33 @@ Regras de estilo derivadas desse padrão (NÃO desvie sem motivo):
    casos "não encontrado") e `XCreateDtoValidatorTests.cs` (um `[Fact]` válido +
    `[Theory]`/`[Fact]` para cada regra de validação). Use **asserts nativos do
    xUnit** e o `FluentValidation.TestHelper` (`TestValidate`,
-   `ShouldHaveValidationErrorFor`, `ShouldNotHaveAnyValidationErrors`).
-   **Não use FluentAssertions** (licença comercial paga na v8).
+    `ShouldHaveValidationErrorFor`, `ShouldNotHaveAnyValidationErrors`).
+    **Não use FluentAssertions** (licença comercial paga na v8).
+
+## Migração EF Core e Banco de Dados
+
+Após gerar todos os arquivos do domínio e editar o DbContext:
+
+1. **Gere a migração**:
+   ```
+   dotnet ef migrations add AddXEntity --project src/ProdutosApi --startup-project src/ProdutosApi --output-directory Migrations --nologo
+   ```
+   Substitua `XEntity` pelo nome da entidade (ex.: `AddCategoriaEntity`).
+
+2. **Valide o build** após a migração ser criada:
+   ```
+   dotnet build Migracao.sln --nologo -v q
+   ```
+
+3. **Aplique as migrações no banco PostgreSQL** (se houver migrações pendentes):
+   ```
+   dotnet ef database update --project src/ProdutosApi --startup-project src/ProdutosApi --nologo
+   ```
+   Se o banco já estiver atualizado, o comando retorna sem alterações.
+
+4. **Verifique** se o arquivo de migração foi criado em `src/ProdutosApi/Migrations/`
+   e se ele contém as configurações corretas para a nova entidade (colunas, tipos,
+   constraints).
 
 ## Procedimento
 
@@ -102,12 +126,15 @@ Regras de estilo derivadas desse padrão (NÃO desvie sem motivo):
    `src/ProdutosApi/Program.cs` (registro do Service).
 5. Crie os dois arquivos de teste em `tests/ProdutosApi.Tests/`.
 6. Rode `dotnet build Migracao.sln --nologo -v q` e corrija erros até compilar.
-7. Rode `dotnet test Migracao.sln --nologo -v q` e garanta que todos passam.
-8. Se algum teste falhar, analise a mensagem de erro, ajuste o código ou os
-    testes até que todos passem. Repita `dotnet build` + `dotnet test` até obter
-    build limpo e testes 100% verdes.
-9. Faça um resumo: arquivos criados/alterados, endpoints expostos
-    (`/api/<entidades>`), regras de validação aplicadas e o resultado dos testes.
+7. Gere a migração EF Core com `dotnet ef migrations add AddXEntity ...`.
+8. Rode `dotnet test Migracao.sln --nologo -v q` e garanta que todos passam.
+9. Se algum teste falhar, analise a mensagem de erro, ajuste o código ou os
+   testes até que todos passem. Repita `dotnet build` + `dotnet test` até obter
+   build limpo e testes 100% verdes.
+10. Aplique as migrações no banco com `dotnet ef database update ...`.
+11. Faça um resumo: arquivos criados/alterados, endpoints expostos
+    (`/api/<entidades>`), regras de validação aplicadas, migração gerada e
+    resultado dos testes.
 
 ## Pluralização das rotas
 
