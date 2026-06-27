@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<Pet> Pets => Set<Pet>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Produto>(entity =>
@@ -73,6 +75,25 @@ public class AppDbContext : DbContext
 
             entity.Property(u => u.Salt)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<Pet>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.Nome)
+                .IsRequired()
+                .HasMaxLength(80);
+
+            entity.Property(p => p.Raça)
+                .IsRequired()
+                .HasMaxLength(80);
+
+            entity.Property(p => p.Cor)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasIndex(p => p.Nome);
         });
     }
 }

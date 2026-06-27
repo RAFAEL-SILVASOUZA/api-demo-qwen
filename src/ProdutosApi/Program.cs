@@ -19,6 +19,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPetService, PetService>();
 
 // Validações com FluentValidation (validação automática a partir dos DTOs).
 builder.Services.AddFluentValidationAutoValidation();
@@ -91,18 +92,21 @@ builder.Services.AddSwaggerGen(options =>
             Scheme = "bearer",
             BearerFormat = "JWT",
             In = ParameterLocation.Header,
-            Description = "Insira o token JWT no campo abaixo."
+            Description = "Insira o token JWT (sem o prefixo Bearer) no campo abaixo."
         });
 
         options.AddSecurityRequirement((doc) =>
         {
             var requirement = new OpenApiSecurityRequirement();
-            requirement.Add(new OpenApiSecuritySchemeReference("Bearer"), new List<string>());
+            var schemeRef = new OpenApiSecuritySchemeReference("Bearer", doc);
+            requirement.Add(schemeRef, new List<string>());
             return requirement;
         });
     });
 
 var app = builder.Build();
+
+app.UseStaticFiles(); // Serve arquivos estáticos do wwwroot
 
 if (app.Environment.IsDevelopment())
 {
@@ -110,11 +114,25 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Produtos API v1");
-        options.RoutePrefix = string.Empty; // Swagger na raiz: https://localhost:porta/
+        options.RoutePrefix = string.Empty;
     });
+
+
 }
 
 app.UseHttpsRedirection();
+
+// Middleware que extrai o token do cookie "token" e injeta no header Authorization
+app.Use(async (context, next) =>
+{
+    var token = context.Request.Cookies["token"];
+    if (!string.IsNullOrEmpty(token))
+    {
+        context.Request.Headers["Authorization"] = "Bearer " + token;
+    }
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProdutosApi.Data;
 
 namespace ProdutosApi.Tests;
